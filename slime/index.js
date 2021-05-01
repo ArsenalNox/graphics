@@ -1,22 +1,26 @@
-var slimes = [];
 
 var canvas = document.getElementById('canvas');
+
+canvas.width  = window.innerWidth
+canvas.height = window.innerHeight
+
 var ctx = canvas.getContext('2d')
 var dimension = {
-    width: canvas.clientWidth,
-    height: canvas.clientHeight
+    width: canvas.width,
+    height: canvas.height
 };
 
+var slimes = [];
 var slime_speed = 1;
-var slime_angle = 45;
+var slime_angle = 10;
 var slime_sensetivity = 24;
 var slime_trace_disappearance_coeff = 1;
 
-var debug = true;
+var debug = false;
 
 var nextStepAllowed = true;
 
-var alpha = 0.01;
+var alpha = 0.05;
 
 class Slime { 
     constructor(posX, posY, color, speed, angle, trace_coeff, sensetivity, search_angle, pos_calc_type){
@@ -31,11 +35,19 @@ class Slime {
         this.sensetivity = sensetivity;
         this.search_angle = search_angle * (Math.PI/180)
         this.pos_calc_type = pos_calc_type
-        console.log(this.angle, this.search_angle)
     }   
-    
-    
 };
+
+function meanColor(data, search_color){
+    let mean = 0;
+    let iterat = 0;
+    for(let i=0; i<data.length; i+=4){
+        mean += data[i+search_color]
+        iterat++;
+    }
+    if(mean == 0 || iterat==0) return 0;
+    return Math.round(mean/iterat);
+}
 
 function populate(slimeCount, positionFormulaType=null, slimeType=null, posCalcType='round'){
     let positions = []
@@ -63,7 +75,7 @@ function populate(slimeCount, positionFormulaType=null, slimeType=null, posCalcT
         case 'green':
             for(let i=0; i<slimeCount; i++){
 
-                let newSlime = new Slime(positions[i].x, positions[i].y, {r: 0, g: 255, b: 0}, 1, 90, 1, 1, 30, posCalcType);
+                let newSlime = new Slime(positions[i].x, positions[i].y, {r: 0, g: 255, b: 0}, 1, 0, 100, 20, 32, posCalcType);
 
                 slimes.push(newSlime)
             }
@@ -91,7 +103,25 @@ function calculate(){
 
         switch (slimes[i].pos_calc_type){
             case 'precise':
-                    case 'round':
+                var posA = {
+                    x: slimes[i].posX + slimes[i].speed * Math.cos(slimes[i].angle),
+                    y: slimes[i].posY + slimes[i].speed * Math.sin(slimes[i].angle),
+                    angle: slimes[i].angle
+                }
+                
+                var posB = {
+                    x: slimes[i].posX + slimes[i].speed * Math.cos(slimes[i].angle + slimes[i].search_angle),
+                    y: slimes[i].posY + slimes[i].speed * Math.sin(slimes[i].angle + slimes[i].search_angle),
+                    angle: slimes[i].angle + slimes[i].search_angle
+                }
+
+                var posC = {
+                    x: slimes[i].posX + slimes[i].speed * Math.cos(slimes[i].angle - slimes[i].search_angle),
+                    y: slimes[i].posY + slimes[i].speed * Math.sin(slimes[i].angle - slimes[i].search_angle),
+                    angle: slimes[i].angle - slimes[i].search_angle
+                }
+
+            case 'round':
             default:
                 var posA = {
                     x: Math.round(slimes[i].posX + slimes[i].speed * Math.cos(slimes[i].angle)),
@@ -120,13 +150,13 @@ function calculate(){
         let imageDataC = ctx.getImageData(posC.x, posC.y, 1, 1);
         
         if(debug){
-            ctx.fillStyle = "rgba(0,0,0,0.4)";
+            ctx.fillStyle = "rgba(100,100,100,0.4)";
             ctx.fillRect(posA.x, posA.y, 1, 1);
             ctx.fillRect(posB.x, posB.y, 1, 1);
             ctx.fillRect(posC.x, posC.y, 1, 1);
             ctx.stroke();
         }
-
+        
         if(imageDataB.data[1] > slime_sensetivity){
             posibleDirections.push({
                 x: posB.x,
@@ -134,7 +164,7 @@ function calculate(){
                 a: posB.angle
             })
         }
-        
+
         if(imageDataA.data[1] > slime_sensetivity){
             posibleDirections.push({
                 x: posA.x,
@@ -143,17 +173,22 @@ function calculate(){
             })
 
         }
-        
+
         if(imageDataC.data[1] > slime_sensetivity){
             posibleDirections.push({
                 x: posC.x,
                 y: posC.y,
                 a: posC.angle
             })
-
         }
         
         if(posibleDirections.length == 0){
+            slimes[i].angle += randomNumber(-2, 2) * (Math.PI/180)
+            posA = {
+                    x: Math.round(slimes[i].posX + slimes[i].speed * Math.cos(slimes[i].angle)),
+                    y: Math.round(slimes[i].posY + slimes[i].speed * Math.sin(slimes[i].angle)),
+                    angle: slimes[i].angle
+            }
             slimes[i].posX = posA.x;
             slimes[i].posY = posA.y;
         } else {
@@ -191,7 +226,7 @@ function randomNumber(a, b){
 }
 
 function draw(){
-    ctx.fillStyle = "rgba(255, 255, 255, "+alpha+")";
+    ctx.fillStyle = "rgba(0, 0, 0, "+alpha+")";
     ctx.fillRect(0,0,dimension.width, dimension.height)
     for(let i=0; i < slimes.length; i++){
         
@@ -211,6 +246,7 @@ function update(){
 
 
 document.addEventListener('keydown', (e)=>{
+    console.log(e.keyCode)
     if(e.keyCode == 32){
         if(nextStepAllowed){
             nextStepAllowed=false;
@@ -220,10 +256,7 @@ document.addEventListener('keydown', (e)=>{
         }
     }
 })
-
-
-populate(500, 'forward',      'green', 'precise');
-
+populate(500, null,      'green', 'precise');
 
 draw();
 calculate()
