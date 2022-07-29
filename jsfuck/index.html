@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+<style>
+	html, body {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+	overflow: hidden;
+}
+</style>
+</head>
+<body>
+	<canvas id='cnv' width="100%" height="100%">
+
+	</canvas>
+</body>
+<script src="main.js"></script>
+<script>
+function R (r,g,b,a){
+	a = a === undefined ? 1 : a;
+	return "rgba("+(r|0)+","+(g|0)+","+(b|0)+","+a+")";
+}
+
+
+
+var t = 1
+var C = document.getElementById('cnv')
+C.width = window.innerWidth
+C.height = window.innerHeight
+
+var x = C.getContext('2d')
+function u(t){
+	for(x.fillRect(0,0,m=20e3,m);m--;x.fillStyle=R(0,m*Math.sin(m/99+t*9)/19,Y/2))Y=m/9,x.fillRect(960+Math.cos(k=m/2-t)*Y*2,540+Math.sin(k)*Y+Math.sin(Y/77+m)*99,Y/9,9)
+}
+setInterval(()=>{
+	u(t)
+	t+=0.01
+},10)
+</script>
+</html>
